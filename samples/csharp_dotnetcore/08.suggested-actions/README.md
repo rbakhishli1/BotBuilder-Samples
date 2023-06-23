@@ -29,6 +29,8 @@ This bot has been created using [Bot Framework](https://dev.botframework.com), i
   # run the bot
   dotnet run
   ```
+- Preview 
+![Alt text](image.png)
 
   B) Or from Visual Studio
 
