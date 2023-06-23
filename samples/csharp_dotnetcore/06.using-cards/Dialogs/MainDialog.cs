@@ -9,6 +9,9 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -22,7 +25,7 @@ namespace Microsoft.BotBuilderSamples
             _logger = logger;
 
             // Define the main dialog and its related components.
-            AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
+            AddDialog(new ChoicePrompt(nameof(ChoicePrompt), ChoiceValidator));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 ChoiceCardStepAsync,
@@ -31,6 +34,34 @@ namespace Microsoft.BotBuilderSamples
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
+        }
+
+        private async Task<bool> ChoiceValidator(PromptValidatorContext<FoundChoice> promptContext, CancellationToken cancellationToken)
+        {
+            // Retrieves Adaptive Card comment text as JObject.
+            // looks for JObject field "text" and converts that input into a trimmed text string.
+            var jobject = promptContext.Context.Activity.Value as JObject;
+            var jtoken = jobject?["text"];
+            var text = jtoken?.ToString().Trim();
+
+            // Logic: 1. if succeeded = true, just return promptContext
+            //        2. if false, see if JObject contained Adaptive Card input.
+            //               No = (bad input) return promptContext
+            //               Yes = update Value field with JObject text string, return "true".
+            if (!promptContext.Recognized.Succeeded && text != null)
+            {
+                var choice = promptContext.Options.Choices.FirstOrDefault(
+                c => c.Value.Equals(text, StringComparison.OrdinalIgnoreCase));
+                if (choice != null)
+                {
+                    promptContext.Recognized.Value = new FoundChoice
+                    {
+                        Value = choice.Value,
+                    };
+                    return true;
+                }
+            }
+            return promptContext.Recognized.Succeeded;
         }
 
         // 1. Prompts the user if the user is not in the middle of a dialog.
@@ -57,14 +88,14 @@ namespace Microsoft.BotBuilderSamples
         private async Task<DialogTurnResult> ShowCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             _logger.LogInformation("MainDialog.ShowCardStepAsync");
-            
+
             // Cards are sent as Attachments in the Bot Framework.
             // So we need to create a list of attachments for the reply activity.
             var attachments = new List<Attachment>();
-            
+
             // Reply to the activity we received with an activity.
             var reply = MessageFactory.Attachment(attachments);
-            
+
             // Decide which type of card(s) we are going to show the user
             switch (((FoundChoice)stepContext.Result).Value)
             {

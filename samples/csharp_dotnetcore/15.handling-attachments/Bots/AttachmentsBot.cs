@@ -20,7 +20,7 @@ namespace Microsoft.BotBuilderSamples
     // each time they're requested. For each Activity received, a new instance of this
     // class is created. Objects that are expensive to construct, or have a lifetime
     // beyond the single turn, should be carefully managed.
- 
+
     public class AttachmentsBot : ActivityHandler
     {
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -36,7 +36,7 @@ namespace Microsoft.BotBuilderSamples
             await turnContext.SendActivityAsync(reply, cancellationToken);
             await DisplayOptionsAsync(turnContext, cancellationToken);
         }
-  
+
         private static async Task DisplayOptionsAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             // Create a HeroCard with options for the user to interact with the bot.
@@ -129,7 +129,7 @@ namespace Microsoft.BotBuilderSamples
         }
 
         // Handle attachments uploaded by users. The bot receives an <see cref="Attachment"/> in an <see cref="Activity"/>.
-        // The activity has a "IList{T}" of attachments.    
+        // The activity has a "IList{T}" of attachments.
         // Not all channels allow users to upload files. Some channels have restrictions
         // on file type, size, and other attributes. Consult the documentation for the channel for
         // more information. For example Skype's limits are here
